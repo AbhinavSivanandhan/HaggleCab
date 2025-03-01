@@ -6,8 +6,8 @@ import morgan from "morgan";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import csurf from "csurf"; // Ensure 'npm install -D @types/csurf' is installed
-import accountRoutes from "./routes/account.routes.ts";
-import rideRoutes from "./routes/ride.routes.ts";
+import accountRoutes from "./routes/account.routes.js";
+import rideRoutes from "./routes/ride.routes.js";
 
 dotenv.config();
 

@@ -1,8 +1,9 @@
-import { Router, Request, Response, NextFunction } from "express";
+import { Router, Request, Response, NextFunction, RequestHandler } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 import authMiddleware from "../middleware/authMiddleware.js";
+import type { AuthenticatedRequest } from "../types/expressTypes.js";
 
 const router = Router();
 
@@ -85,9 +86,10 @@ router.post("/logout", (req: Request, res: Response) => {
 // ✅ Get User Profile (Protected)
 router.get(
   "/profile",
-  authMiddleware,
-  asyncHandler(async (req: AuthenticatedRequest, res: Response) => { // ✅ Fix: Ensure req is `AuthenticatedRequest`
-    res.json(req.user);
+  authMiddleware as unknown as RequestHandler, // ✅ Fix: Explicitly cast as Express RequestHandler
+  asyncHandler(async (req: Request, res: Response) => {
+    const authReq = req as AuthenticatedRequest; // ✅ Fix: Explicitly cast req as `AuthenticatedRequest`
+    res.json(authReq.user);
   })
 );
 
