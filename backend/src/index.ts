@@ -1,4 +1,6 @@
 import express from "express";
+import http from "http"; // ✅ Import HTTP for WebSockets
+import { Server } from "socket.io"; // ✅ Import Socket.io
 import mongoose from "mongoose";
 import cors from "cors";
 import helmet from "helmet";
@@ -15,6 +17,15 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5001;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/ridesharing";
+
+// ✅ Create HTTP Server for WebSockets
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "http://your-frontend.com",
+    methods: ["GET", "POST"],
+  },
+});
 
 // ✅ Connect to MongoDB
 mongoose
@@ -42,10 +53,36 @@ console.log("✅ Registering Routes...");
 app.use("/api/account", accountRoutes); // Account-related endpoints (register, login, logout, profile)
 app.use("/api/rides", rideRoutes); // Ride-related endpoints
 
+// ✅ WebSockets: Handle Passenger & Driver Connections
+io.on("connection", (socket) => {
+  console.log("🚀 A user connected:", socket.id);
+
+  socket.on("joinRideRoom", (rideId) => {
+    socket.join(rideId);
+    console.log(`🔗 User joined ride room: ${rideId}`);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("❌ A user disconnected:", socket.id);
+  });
+});
+
 // ✅ Health Check Route
 app.get("/", (req, res) => {
   res.send("API is running!");
 });
 
+//Testing ONLY!
+app.get("/csrf-token", (req, res) => {
+  res.json({ csrfToken: req.csrfToken() });
+});
+
+app.get("/jwt-debug", (req, res) => {
+  res.json({ jwt: req.cookies.jwt });
+});
+//remove above endpoints
+
 // ✅ Start Server
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+export { io }; // ✅ Export io instance for use in ride routes
